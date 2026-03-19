@@ -1,0 +1,64 @@
+<header class="bg-gray-900 text-white py-4 shadow-lg">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center">
+    <!-- Logo/Title -->
+    <div class="flex items-center space-x-2">
+      <div class="text-2xl font-bold text-indigo-500">🛒</div>
+      <h1 class="text-2xl font-bold">ShopHub</h1>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="hidden md:flex space-x-6">
+      @if (isLoggedIn) {
+        <a
+          routerLink="/products"
+          routerLinkActive="text-indigo-500"
+          class="hover:text-indigo-400 transition"
+        >
+          Products
+        </a>
+        <a
+          routerLink="/cart"
+          routerLinkActive="text-indigo-500"
+          class="hover:text-indigo-400 transition"
+        >
+          Cart
+        </a>
+        <a
+          routerLink="/checkout"
+          routerLinkActive="text-indigo-500"
+          class="hover:text-indigo-400 transition"
+        >
+          Checkout
+        </a>
+        <button (click)="logout()" class="hover:text-indigo-400 transition">Logout</button>
+      } @else {
+        <a
+          routerLink="/login"
+          routerLinkActive="text-indigo-500"
+          class="hover:text-indigo-400 transition"
+        >
+          Login
+        </a>
+      }
+    </nav>
+
+    <!-- TODO: Show a cart icon with a live badge displaying the total item count.
+         The badge should only appear when cartItemCount > 0.
+         Clicking the icon should navigate to /cart. -->
+    @if (isLoggedIn) {
+      <div class="relative">
+        <a routerLink="/cart" class="flex items-center space-x-1 hover:text-indigo-400 transition">
+          <span class="text-2xl">🛍️</span>
+          <!-- TODO: Display cartItemCount in the badge when > 0 -->
+          @if (cartItemCount > 0) {
+            <span
+              class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold"
+            >
+              {{ cartItemCount }}
+            </span>
+          }
+        </a>
+      </div>
+    }
+  </div>
+</header>

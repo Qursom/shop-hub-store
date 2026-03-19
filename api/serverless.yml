@@ -1,0 +1,76 @@
+service: sz-frontend-interview-service
+
+plugins:
+  - serverless-offline
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  stage: dev
+  region: us-east-1
+  memorySize: 128
+  timeout: 10
+  httpApi:
+    cors:
+      allowedOrigins:
+        - 'http://localhost:4200'
+      allowedHeaders:
+        - Content-Type
+        - Authorization
+        - X-Requested-With
+      allowedMethods:
+        - GET
+        - POST
+        - PUT
+        - DELETE
+        - OPTIONS
+  environment:
+    NODE_ENV: ${self:provider.stage}
+
+functions:
+  authLogin:
+    handler: src/handlers/auth.login
+    events:
+      - httpApi:
+          path: /auth/login
+          method: post
+
+  listProducts:
+    handler: src/handlers/products.listProducts
+    events:
+      - httpApi:
+          path: /products
+          method: get
+
+  getProduct:
+    handler: src/handlers/products.getProduct
+    events:
+      - httpApi:
+          path: /products/{id}
+          method: get
+
+  getKey:
+    handler: src/handlers/keys.getKey
+    events:
+      - httpApi:
+          path: /keys
+          method: get
+
+  checkout:
+    handler: src/handlers/keys.checkout
+    events:
+      - httpApi:
+          path: /checkout
+          method: post
+
+resources:
+  Outputs:
+    HttpApiUrl:
+      Description: "HTTP API endpoint URL"
+      Value:
+        Fn::Join:
+          - ''
+          - - 'https://'
+            - Ref: HttpApi
+            - '.execute-api.'
+            - Ref: AWS::Region

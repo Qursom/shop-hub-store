@@ -1,0 +1,134 @@
+<div class="min-h-screen bg-gray-50 py-8">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Page Title -->
+    <div class="mb-8">
+      <h1 class="text-3xl font-bold text-gray-900">Products</h1>
+      <p class="text-gray-600 mt-2">Browse our collection of products</p>
+    </div>
+
+    <!-- TODO: Show a loading spinner while products are being fetched (use the `loading` property) -->
+    @if (loading) {
+      <div class="flex justify-center items-center py-12">
+        <div class="text-center">
+          <div
+            class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500 mx-auto"
+          ></div>
+          <p class="text-gray-600 mt-4">Loading products...</p>
+        </div>
+      </div>
+    }
+
+    <!-- TODO: Show an error banner when `error` is set and loading is false.
+         Include the error message and a Retry button that calls retry() -->
+    @if (error && !loading) {
+      <div class="bg-red-50 border border-red-200 rounded-lg p-6 mb-6">
+        <div class="flex justify-between items-center">
+          <div>
+            <h3 class="text-lg font-semibold text-red-800">Error</h3>
+            <p class="text-red-700 mt-1">{{ error }}</p>
+          </div>
+          <button
+            (click)="retry()"
+            class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded transition"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    }
+
+    <!-- TODO: Render the product grid when not loading and products are available.
+         Each card should display: image, name, category, description, price, stock status,
+         and an "Add to Cart" button that calls addToCart(product). -->
+    @if (!loading && products.length > 0) {
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        @for (product of products; track product.id) {
+          <div class="bg-white rounded-lg shadow hover:shadow-lg transition overflow-hidden">
+            <!-- Product Image -->
+            <div class="bg-gray-200 h-48 flex items-center justify-center overflow-hidden">
+              <img
+                [src]="product.imageUrl || placeholder"
+                [alt]="product.name"
+                (error)="onImageError($event)"
+                class="w-full h-full object-cover hover:scale-105 transition"
+              />
+            </div>
+
+            <!-- Product Info -->
+            <div class="p-4">
+              <h3 class="text-lg font-semibold text-gray-900 truncate">{{ product.name }}</h3>
+
+              <!-- Category -->
+              @if (product.category) {
+                <p class="text-sm text-gray-500 mt-1">{{ product.category }}</p>
+              }
+
+              <!-- Description -->
+              <p class="text-gray-600 text-sm mt-2 line-clamp-2" [title]="product.description">
+                {{ product.description }}
+              </p>
+
+              <!-- Price -->
+              <div class="mt-4 flex items-baseline space-x-2">
+                <span class="text-2xl font-bold text-indigo-600"
+                  >${{ product.price.toFixed(2) }}</span
+                >
+              </div>
+
+              <!-- TODO: Display stock status — "In Stock" (green) or "Out of Stock" (red) -->
+              @if (product.stock !== undefined) {
+                <div class="mt-2">
+                  <!-- TODO: Apply correct colour class based on product.stock value -->
+                  <span class="text-sm font-medium">
+                    {{ product.stock > 0 ? 'In Stock' : 'Out of Stock' }}
+                  </span>
+                </div>
+              }
+
+              <!-- Add to Cart Button -->
+              <!-- TODO: Disable the button when the product is out of stock -->
+              <button
+                (click)="addToCart(product)"
+                class="w-full mt-4 bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-400 text-white font-medium py-2 px-4 rounded transition"
+              >
+                Add to Cart
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Empty State -->
+    @if (!loading && products.length === 0 && !error) {
+      <div class="text-center py-12">
+        <p class="text-gray-600 text-lg">No products available at the moment.</p>
+      </div>
+    }
+
+    <!-- TODO: Show pagination controls when there is more than one page.
+         Include Previous / Next buttons (disabled at boundaries) and a page indicator.
+         Call goToPage() on click. -->
+    @if (!loading && totalPages > 1) {
+      <div class="mt-8 flex items-center justify-center space-x-4">
+        <button
+          (click)="goToPage(currentPage - 1)"
+          [disabled]="currentPage === 1"
+          class="px-4 py-2 border border-gray-300 rounded text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
+        >
+          Previous
+        </button>
+
+        <span class="text-sm text-gray-600"> Page {{ currentPage }} of {{ totalPages }} </span>
+
+        <button
+          (click)="goToPage(currentPage + 1)"
+          [disabled]="currentPage === totalPages"
+          class="px-4 py-2 border border-gray-300 rounded text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
+        >
+          Next
+        </button>
+      </div>
+    }
+  </div>
+</div>

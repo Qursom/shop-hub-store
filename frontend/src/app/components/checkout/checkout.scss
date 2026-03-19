@@ -1,0 +1,14 @@
+/* Simple checkout form styling */
+
+:host {
+  display: block;
+}
+
+input.ng-invalid.ng-touched {
+  border-color: #e3342f;
+}
+
+button[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

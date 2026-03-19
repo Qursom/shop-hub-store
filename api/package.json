@@ -1,0 +1,22 @@
+{
+  "name": "shop-hub-api",
+  "version": "1.0.0",
+  "description": "AWS Serverless setup with API Gateway and Lambdas",
+  "type": "commonjs",
+  "scripts": {
+    "offline": "serverless offline",
+    "deploy": "serverless deploy",
+    "invoke": "serverless invoke -f",
+    "remove": "serverless remove",
+    "install:serverless": "npm install -g serverless"
+  },
+  "dependencies": {
+    "aws-sdk": "^2.1350.0"
+  },
+  "devDependencies": {
+    "serverless": "^3.40.0",
+    "serverless-offline": "^13.6.0"
+  },
+  "author": "",
+  "license": "MIT"
+}

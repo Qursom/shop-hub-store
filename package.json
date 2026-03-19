@@ -1,0 +1,25 @@
+{
+  "name": "shop-hub",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "api",
+    "frontend"
+  ],
+  "scripts": {
+    "install:all": "npm install --workspaces",
+    "start:api": "npm run offline --workspace=api",
+    "start:frontend": "npm run start --workspace=frontend",
+    "build:frontend": "npm run build --workspace=frontend",
+    "test": "npm run test --workspace=frontend",
+    "lint": "npm run lint --workspace=frontend",
+    "lint:fix": "npm run lint:fix --workspace=frontend",
+    "format": "npm run format --workspace=frontend",
+    "docker:build": "docker compose build",
+    "docker:start": "docker compose up",
+    "docker:up": "docker compose up --build",
+    "docker:down": "docker compose down",
+    "docker:down:up": "docker compose down && docker compose up --build",
+    "docker:clean": "docker compose down -v"
+  }
+}
