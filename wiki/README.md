@@ -35,7 +35,7 @@ A: Yes, AI tool usage is allowed and encouraged.
 A: Review the JSDoc comments and TODO hints in the service/component stubs, check the Angular documentation, or ask your interviewer.
 
 **Q: How long should this take?**\
-A: Aim for 5–9 hours across all features. Manage your time across tasks.
+A: Aim for 1–2 hours across all features. Manage your time across tasks.
 
 **Q: Can I refactor existing code?**\
 A: Yes, if it improves quality.
