@@ -35,9 +35,9 @@ export class HeaderComponent implements OnInit {
   isLoggedIn = false;
 
   ngOnInit(): void {
-    // TODO: Subscribe to cartService.cart$ (use takeUntilDestroyed)
+    // TODO: Subscribe to cartService.cart$
     // On each emission calculate the total item count (sum of all item quantities)
-    // and assign it to this.cartItemCount, then call cdr.detectChanges()
+    // and assign it to this.cartItemCount
 
     // Auth subscription — already wired up for you
     this.authService.isLoggedIn$

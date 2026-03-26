@@ -36,7 +36,7 @@ export class CartComponent implements OnInit {
   readonly placeholder = APP_CONSTANTS.DEFAULT_PLACEHOLDER_URL;
 
   ngOnInit(): void {
-    // TODO: Subscribe to cartService.cart$ (use takeUntilDestroyed)
+    // TODO: Subscribe to cartService.cart$
     // On each emission update this.cart and call calculateTotals()
   }
 
@@ -46,9 +46,6 @@ export class CartComponent implements OnInit {
    */
   private calculateTotals(): void {
     // TODO: Implement price calculations
-    // - this.subtotal = cartService.getSubtotal()
-    // - this.tax = subtotal * taxRate
-    // - this.total = subtotal + tax
   }
 
   /**
@@ -57,7 +54,7 @@ export class CartComponent implements OnInit {
    * @param productId - ID of the product to remove.
    */
   removeItem(productId: string): void {
-    // TODO: Call cartService.removeItem(productId)
+    // TODO: Implement remove item
   }
 
   /**
@@ -68,14 +65,14 @@ export class CartComponent implements OnInit {
    * @param quantity - New desired quantity.
    */
   updateQuantity(productId: string, quantity: number): void {
-    // TODO: If quantity <= 0, remove the item; otherwise call cartService.updateQuantity()
+    // TODO: If quantity <= 0, remove the item; otherwise update quantity
   }
 
   /**
    * Prompts the user for confirmation and clears all items from the cart.
    */
   clearCart(): void {
-    // TODO: Confirm with the user, then call cartService.clearCart()
+    // TODO: Confirm with the user, then clear cart
   }
 
   /**
@@ -94,6 +91,6 @@ export class CartComponent implements OnInit {
    * @param event - The native change event from the `<input>` element.
    */
   onQuantityChange(productId: string, event: Event): void {
-    // TODO: Parse the input value as a number and call updateQuantity()
+    // TODO: Parse the input value as a number and update quantity
   }
 }

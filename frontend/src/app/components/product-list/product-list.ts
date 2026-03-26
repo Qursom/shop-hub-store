@@ -51,8 +51,8 @@ export class ProductListComponent implements OnInit {
 
   /**
    * TODO: Subscribe to productService.products$, loading$, error$, and total$
-   * for the lifetime of the component (use takeUntilDestroyed).
-   * On each emission update the corresponding local property and call cdr.detectChanges().
+   * for the lifetime of the component.
+   * On each emission update the corresponding local property.
    */
   private initializeSubscriptions(): void {
     // TODO: Set up subscriptions to:

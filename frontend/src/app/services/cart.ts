@@ -110,7 +110,7 @@ export class CartService {
    * @returns Total amount including the applied tax.
    */
   getTotalWithTax(taxRate = 0): number {
-    // TODO: Return subtotal + (subtotal * taxRate)
+    // TODO: Return total included tax
     return 0;
   }
 
@@ -135,7 +135,7 @@ export class CartService {
   }
 
   /**
-   * Serialises and saves the cart to localStorage.
+   * Serializes and saves the cart to localStorage.
    *
    * @param cart - The cart to persist.
    */
