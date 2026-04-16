@@ -61,35 +61,39 @@ describe('CartComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  // TODO: Test that subtotal, tax, and total are recalculated when cart$ emits a new value
   it('recalculates totals when cart$ emits', () => {
-    // TODO: Configure mockCartService.getSubtotal to return a known value (e.g. 100)
-    // Push a new cart into cartSubject
-    // Assert component.subtotal, component.tax (10%), and component.total are correct
+    mockCartService.getSubtotal.mockReturnValue(100);
+    cartSubject.next(makeCart([{ product: makeProduct({ id: 'p1' }), quantity: 2 }]));
+
+    expect(component.subtotal).toBe(100);
+    expect(component.tax).toBe(10);
+    expect(component.total).toBe(110);
   });
 
-  // TODO: Test that removeItem() delegates to CartService.removeItem
   it('calls CartService.removeItem with the correct productId', () => {
-    // TODO: Call component.removeItem('p1')
-    // Assert mockCartService.removeItem was called with 'p1'
+    component.removeItem('p1');
+
+    expect(mockCartService.removeItem).toHaveBeenCalledWith('p1');
   });
 
-  // TODO: Test that updateQuantity() delegates to CartService.updateQuantity for positive values
   it('calls CartService.updateQuantity for a positive quantity', () => {
-    // TODO: Call component.updateQuantity('p1', 3)
-    // Assert mockCartService.updateQuantity was called with ('p1', 3)
+    component.updateQuantity('p1', 3);
+
+    expect(mockCartService.updateQuantity).toHaveBeenCalledWith('p1', 3);
   });
 
-  // TODO: Test that updateQuantity() removes the item when quantity is 0 or negative
   it('removes the item when updateQuantity is called with 0 or less', () => {
-    // TODO: Call component.updateQuantity('p1', 0)
-    // Assert mockCartService.removeItem was called with 'p1'
+    component.updateQuantity('p1', 0);
+
+    expect(mockCartService.removeItem).toHaveBeenCalledWith('p1');
   });
 
-  // TODO: Test that onQuantityChange() parses the input event value and calls updateQuantity
   it('parses the input event value and delegates to updateQuantity', () => {
-    // TODO: Create a synthetic Event with target.value = '4'
-    // Call component.onQuantityChange('p1', event)
-    // Assert updateQuantity was called with ('p1', 4)
+    const spy = vi.spyOn(component, 'updateQuantity');
+    const event = { target: { value: '4' } } as unknown as Event;
+
+    component.onQuantityChange('p1', event);
+
+    expect(spy).toHaveBeenCalledWith('p1', 4);
   });
 });

@@ -6,7 +6,13 @@
       <p class="text-gray-600 mt-2">Browse our collection of products</p>
     </div>
 
-    <!-- TODO: Show a loading spinner while products are being fetched (use the `loading` property) -->
+    @if (addToCartNotice) {
+      <div class="mb-6 rounded-lg border border-indigo-200 bg-indigo-50 px-4 py-3 text-sm text-indigo-800">
+        {{ addToCartNotice }}
+      </div>
+    }
+
+    <!-- Loading state -->
     @if (loading) {
       <div class="flex justify-center items-center py-12">
         <div class="text-center">
@@ -18,8 +24,7 @@
       </div>
     }
 
-    <!-- TODO: Show an error banner when `error` is set and loading is false.
-         Include the error message and a Retry button that calls retry() -->
+    <!-- Error state -->
     @if (error && !loading) {
       <div class="bg-red-50 border border-red-200 rounded-lg p-6 mb-6">
         <div class="flex justify-between items-center">
@@ -37,13 +42,11 @@
       </div>
     }
 
-    <!-- TODO: Render the product grid when not loading and products are available.
-         Each card should display: image, name, category, description, price, stock status,
-         and an "Add to Cart" button that calls addToCart(product). -->
+    <!-- Product grid -->
     @if (!loading && products.length > 0) {
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         @for (product of products; track product.id) {
-          <div class="bg-white rounded-lg shadow hover:shadow-lg transition overflow-hidden">
+          <div class="bg-white rounded-lg shadow hover:shadow-lg transition overflow-hidden border border-gray-100">
             <!-- Product Image -->
             <div class="bg-gray-200 h-48 flex items-center justify-center overflow-hidden">
               <img
@@ -75,20 +78,24 @@
                 >
               </div>
 
-              <!-- TODO: Display stock status — "In Stock" (green) or "Out of Stock" (red) -->
               @if (product.stock !== undefined) {
                 <div class="mt-2">
-                  <!-- TODO: Apply correct colour class based on product.stock value -->
-                  <span class="text-sm font-medium">
+                  <span
+                    class="inline-flex items-center rounded-full px-2 py-1 text-xs font-semibold"
+                    [class.bg-green-100]="product.stock > 0"
+                    [class.text-green-700]="product.stock > 0"
+                    [class.bg-red-100]="product.stock <= 0"
+                    [class.text-red-700]="product.stock <= 0"
+                  >
                     {{ product.stock > 0 ? 'In Stock' : 'Out of Stock' }}
                   </span>
                 </div>
               }
 
-              <!-- Add to Cart Button -->
-              <!-- TODO: Disable the button when the product is out of stock -->
+              <!-- Add to cart -->
               <button
                 (click)="addToCart(product)"
+                [disabled]="(product.stock ?? 0) <= 0"
                 class="w-full mt-4 bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-400 text-white font-medium py-2 px-4 rounded transition"
               >
                 Add to Cart
@@ -106,9 +113,7 @@
       </div>
     }
 
-    <!-- TODO: Show pagination controls when there is more than one page.
-         Include Previous / Next buttons (disabled at boundaries) and a page indicator.
-         Call goToPage() on click. -->
+    <!-- Pagination -->
     @if (!loading && totalPages > 1) {
       <div class="mt-8 flex items-center justify-center space-x-4">
         <button

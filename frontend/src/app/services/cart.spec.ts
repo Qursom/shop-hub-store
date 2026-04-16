@@ -29,44 +29,69 @@ describe('CartService', () => {
     expect(service).toBeTruthy();
   });
 
-  // TODO: Test that addItem() adds a new product to the cart
   it('adds a new product to an empty cart', () => {
-    // TODO: Call service.addItem(makeProduct(), 1)
-    // Assert items.length === 1 and items[0].quantity === 1
+    service.addItem(makeProduct(), 1);
+
+    const cart = service.getCart();
+    expect(cart.items.length).toBe(1);
+    expect(cart.items[0].quantity).toBe(1);
+    expect(cart.items[0].product.id).toBe('p1');
   });
 
-  // TODO: Test that addItem() increments quantity when the same product is added again
   it('increments quantity for a duplicate product', () => {
-    // TODO: Call service.addItem() twice with the same product
-    // Assert items.length is still 1 and quantity reflects the combined amount
+    service.addItem(makeProduct(), 1);
+    service.addItem(makeProduct(), 2);
+
+    const cart = service.getCart();
+    expect(cart.items.length).toBe(1);
+    expect(cart.items[0].quantity).toBe(3);
   });
 
-  // TODO: Test that removeItem() removes a product from the cart
   it('removes an existing item by product id', () => {
-    // TODO: Add an item, then remove it via service.removeItem(productId)
-    // Assert the cart is empty afterwards
+    service.addItem(makeProduct(), 1);
+    service.removeItem('p1');
+
+    expect(service.getCart().items).toHaveLength(0);
   });
 
-  // TODO: Test that getSubtotal() returns the correct sum of price × quantity
   it('calculates the correct subtotal', () => {
-    // TODO: Add products with known prices and quantities
-    // Assert service.getSubtotal() equals the expected total
+    service.addItem(makeProduct({ id: 'p1', price: 10 }), 2);
+    service.addItem(makeProduct({ id: 'p2', price: 15 }), 1);
+
+    expect(service.getSubtotal()).toBe(35);
   });
 
-  // TODO: Test that getTotalItems() returns the sum of all quantities
   it('returns the total number of items across all cart entries', () => {
-    // TODO: Add multiple items and assert service.getTotalItems() is correct
+    service.addItem(makeProduct({ id: 'p1' }), 2);
+    service.addItem(makeProduct({ id: 'p2' }), 3);
+
+    expect(service.getTotalItems()).toBe(5);
   });
 
-  // TODO: Test that clearCart() empties the cart
   it('clears all items from the cart', () => {
-    // TODO: Add items, call service.clearCart(), assert items.length === 0
+    service.addItem(makeProduct({ id: 'p1' }), 1);
+    service.addItem(makeProduct({ id: 'p2' }), 1);
+
+    service.clearCart();
+
+    expect(service.getCart().items).toHaveLength(0);
+    expect(service.getTotalItems()).toBe(0);
   });
 
-  // TODO: Test that the cart is persisted to and restored from localStorage
   it('persists cart to localStorage and restores it on reload', () => {
-    // TODO: Add an item and verify localStorage contains the data
-    // Reinitialise the service (TestBed.resetTestingModule) and verify
-    // the restored cart still contains the item
+    service.addItem(makeProduct({ id: 'p1', price: 12 }), 2);
+
+    const stored = localStorage.getItem('shopping-cart');
+    expect(stored).toBeTruthy();
+    expect(stored).toContain('"id":"p1"');
+
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({});
+    const reloadedService = TestBed.inject(CartService);
+
+    const reloadedCart = reloadedService.getCart();
+    expect(reloadedCart.items).toHaveLength(1);
+    expect(reloadedCart.items[0].product.id).toBe('p1');
+    expect(reloadedCart.items[0].quantity).toBe(2);
   });
 });

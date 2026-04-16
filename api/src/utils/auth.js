@@ -1,9 +1,7 @@
 module.exports.authCheck = (event) => {
-  if (
-    event.headers &&
-    (event.headers.authorization !== "Bearer dummy-jwt-token" &&
-      event.headers.Authorization !== "Bearer dummy-jwt-token")
-  ) {
+  const authHeader = event?.headers?.authorization || event?.headers?.Authorization;
+
+  if (authHeader !== "Bearer dummy-jwt-token") {
     return {
       statusCode: 401,
       body: JSON.stringify({

@@ -13,10 +13,27 @@ module.exports.listProducts = async (event) => {
   
   const qs = event.queryStringParameters || {};
   const page = parseInt(qs.page || "1", 10);
-  const pageSize = parseInt(qs.pageSize || "20", 10);
+  const pageSize = parseInt(qs.pageSize || "10", 10);
+
+  if (Number.isNaN(page) || Number.isNaN(pageSize) || page < 1 || pageSize < 1) {
+    return {
+      statusCode: 400,
+      body: JSON.stringify({
+        error: {
+          code: 400,
+          message: "Invalid pagination query params. `page` and `pageSize` must be positive integers.",
+          details: {
+            page: qs.page ?? null,
+            pageSize: qs.pageSize ?? null,
+          },
+        },
+      }),
+    };
+  }
 
   // filtering logic omitted for brevity – just return the whole list
-  const items = PRODUCT_LIST.slice((page - 1) * pageSize, page * pageSize);
+  const startIndex = (page - 1) * pageSize;
+  const items = PRODUCT_LIST.slice(startIndex, startIndex + pageSize);
 
   return {
     statusCode: 200,

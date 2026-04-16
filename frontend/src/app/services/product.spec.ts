@@ -35,39 +35,61 @@ describe('ProductService', () => {
     expect(service).toBeTruthy();
   });
 
-  // TODO: Test that getProducts() emits fetched items through products$
   it('emits the fetched items through products$', () => {
-    // TODO: Subscribe to service.products$
-    // Call service.getProducts(1, 10).subscribe()
-    // Use httpMock.expectOne() to flush a response with items
-    // Assert products$ emitted the expected products
+    let latestProducts: Product[] = [];
+    service.products$.subscribe((products) => (latestProducts = products));
+
+    service.getProducts(1, 10).subscribe();
+
+    const req = httpMock.expectOne(`${apiBase}/products?page=1&pageSize=10`);
+    req.flush({ items: [makeProduct('p1')], total: 1 });
+
+    expect(latestProducts).toEqual([makeProduct('p1')]);
   });
 
-  // TODO: Test that getProducts() emits the total record count through total$
   it('emits the total count through total$', () => {
-    // TODO: Subscribe to service.total$
-    // Flush a response with a known total
-    // Assert total$ emitted the expected value
+    let latestTotal = 0;
+    service.total$.subscribe((total) => (latestTotal = total));
+
+    service.getProducts(1, 10).subscribe();
+
+    const req = httpMock.expectOne(`${apiBase}/products?page=1&pageSize=10`);
+    req.flush({ items: [makeProduct('p1')], total: 38 });
+
+    expect(latestTotal).toBe(38);
   });
 
-  // TODO: Test that loading$ transitions from true → false during a request
   it('transitions loading$ correctly during the request lifecycle', () => {
-    // TODO: Collect loading$ emissions into an array
-    // Initiate getProducts() and flush the HTTP response
-    // Assert loading was true at some point and is false at the end
+    const loadingStates: boolean[] = [];
+    service.loading$.subscribe((state) => loadingStates.push(state));
+
+    service.getProducts(1, 10).subscribe();
+    const req = httpMock.expectOne(`${apiBase}/products?page=1&pageSize=10`);
+    req.flush({ items: [makeProduct('p1')], total: 1 });
+
+    expect(loadingStates).toContain(true);
+    expect(loadingStates[loadingStates.length - 1]).toBe(false);
   });
 
-  // TODO: Test that getProducts() sends the correct query parameters
   it('passes page and pageSize as query params', () => {
-    // TODO: Call service.getProducts(3, 5)
-    // Use httpMock.expectOne() with the expected URL including query params
-    // Assert the request method is GET
+    service.getProducts(3, 5).subscribe();
+
+    const req = httpMock.expectOne(`${apiBase}/products?page=3&pageSize=5`);
+    expect(req.request.method).toBe('GET');
+    req.flush({ items: [], total: 0 });
   });
 
-  // TODO: Test that error$ is populated when the HTTP request fails
   it('sets error$ on request failure', () => {
-    // TODO: Subscribe to service.error$
-    // Trigger an HTTP error via httpMock
-    // Assert error$ contains a meaningful error message
+    let latestError: string | null = null;
+    service.error$.subscribe((error) => (latestError = error));
+
+    service.getProducts(1, 10).subscribe((products) => {
+      expect(products).toEqual([]);
+    });
+
+    const req = httpMock.expectOne(`${apiBase}/products?page=1&pageSize=10`);
+    req.flush({ error: { message: 'Products endpoint failed' } }, { status: 500, statusText: 'Server Error' });
+
+    expect(latestError).toBe('Products endpoint failed');
   });
 });

@@ -35,11 +35,23 @@ export class CartService {
    * @param quantity - Number of units to add. Defaults to `1`.
    */
   addItem(product: Product, quantity = 1): void {
-    // TODO: Implement add to cart
-    // - Get the current cart from cartSubject
-    // - If the product already exists in the cart, increment its quantity
-    // - Otherwise push a new item { product, quantity }
-    // - Call updateCart() to persist and emit the new state
+    if (!product?.id || quantity <= 0) {
+      return;
+    }
+
+    const cart = this.getCart();
+    const existingItem = cart.items.find((item) => item.product.id === product.id);
+
+    if (existingItem) {
+      existingItem.quantity += quantity;
+      this.updateCart({ ...cart, items: [...cart.items] });
+      return;
+    }
+
+    this.updateCart({
+      ...cart,
+      items: [...cart.items, { product, quantity }],
+    });
   }
 
   /**
@@ -48,9 +60,11 @@ export class CartService {
    * @param productId - ID of the product to remove.
    */
   removeItem(productId: string): void {
-    // TODO: Implement remove from cart
-    // - Filter out the item matching productId
-    // - Call updateCart() to persist and emit the new state
+    const cart = this.getCart();
+    this.updateCart({
+      ...cart,
+      items: cart.items.filter((item) => item.product.id !== productId),
+    });
   }
 
   /**
@@ -61,17 +75,30 @@ export class CartService {
    * @param quantity - New quantity for the product.
    */
   updateQuantity(productId: string, quantity: number): void {
-    // TODO: Implement quantity update
-    // - Find the item matching productId
-    // - If quantity <= 0, remove the item
-    // - Otherwise update the quantity and call updateCart()
+    if (quantity <= 0) {
+      this.removeItem(productId);
+      return;
+    }
+
+    const cart = this.getCart();
+    const updatedItems = cart.items.map((item) =>
+      item.product.id === productId ? { ...item, quantity } : item,
+    );
+
+    this.updateCart({
+      ...cart,
+      items: updatedItems,
+    });
   }
 
   /**
    * Removes all items from the cart.
    */
   clearCart(): void {
-    // TODO: Clear all cart items and call updateCart()
+    this.updateCart({
+      items: [],
+      lastUpdated: new Date(),
+    });
   }
 
   /**
@@ -89,8 +116,7 @@ export class CartService {
    * @returns Sum of quantities for all items in the cart.
    */
   getTotalItems(): number {
-    // TODO: Calculate and return the total item count (sum of all quantities)
-    return 0;
+    return this.getCart().items.reduce((sum, item) => sum + item.quantity, 0);
   }
 
   /**
@@ -99,8 +125,7 @@ export class CartService {
    * @returns Subtotal as a number (price × quantity summed across all items).
    */
   getSubtotal(): number {
-    // TODO: Calculate and return the subtotal (price * quantity for each item)
-    return 0;
+    return this.getCart().items.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
   }
 
   /**
@@ -110,8 +135,8 @@ export class CartService {
    * @returns Total amount including the applied tax.
    */
   getTotalWithTax(taxRate = 0): number {
-    // TODO: Return total included tax
-    return 0;
+    const subtotal = this.getSubtotal();
+    return subtotal + subtotal * taxRate;
   }
 
   /**
@@ -120,7 +145,12 @@ export class CartService {
    * @param cart - The updated cart to save.
    */
   private updateCart(cart: Cart): void {
-    // TODO: Set cart.lastUpdated to new Date(), emit via cartSubject, and persist to storage
+    const updatedCart: Cart = {
+      ...cart,
+      lastUpdated: new Date(),
+    };
+    this.cartSubject.next(updatedCart);
+    this.saveCartToStorage(updatedCart);
   }
 
   /**
@@ -129,9 +159,22 @@ export class CartService {
    * @returns The persisted {@link Cart}, or a fresh empty cart.
    */
   private loadCartFromStorage(): Cart {
-    // TODO: Read CART_STORAGE_KEY from localStorage and parse it
-    // Return { items: [], lastUpdated: new Date() } if nothing is stored
-    return { items: [], lastUpdated: new Date() };
+    const emptyCart: Cart = { items: [], lastUpdated: new Date() };
+    const storedCart = localStorage.getItem(CART_STORAGE_KEY);
+
+    if (!storedCart) {
+      return emptyCart;
+    }
+
+    try {
+      const parsed = JSON.parse(storedCart) as Cart;
+      return {
+        items: Array.isArray(parsed.items) ? parsed.items : [],
+        lastUpdated: parsed.lastUpdated ? new Date(parsed.lastUpdated) : new Date(),
+      };
+    } catch {
+      return emptyCart;
+    }
   }
 
   /**
@@ -140,6 +183,6 @@ export class CartService {
    * @param cart - The cart to persist.
    */
   private saveCartToStorage(cart: Cart): void {
-    // TODO: Stringify and save the cart under CART_STORAGE_KEY in localStorage
+    localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
   }
 }

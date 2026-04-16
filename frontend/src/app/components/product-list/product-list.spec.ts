@@ -69,46 +69,54 @@ describe('ProductListComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  // TODO: Test that the component renders product cards when products$ emits items
   it('displays product cards when products$ emits items', () => {
-    // TODO: Push items into productsSubject
-    // Call fixture.detectChanges()
-    // Query the DOM and assert product names are visible
+    productsSubject.next([makeProduct('p1'), makeProduct('p2')]);
+    fixture.detectChanges();
+
+    const html = fixture.nativeElement.textContent;
+    expect(html).toContain('Product p1');
+    expect(html).toContain('Product p2');
   });
 
-  // TODO: Test that the loading spinner is shown when loading$ is true
   it('shows a loading indicator while products are being fetched', () => {
-    // TODO: Push true into loadingSubject
-    // Call fixture.detectChanges()
-    // Assert a spinner or loading element is present in the DOM
+    loadingSubject.next(true);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('Loading products...');
   });
 
-  // TODO: Test that the error banner appears when error$ has a message
   it('displays an error message when error$ emits', () => {
-    // TODO: Push an error string into errorSubject (and false into loadingSubject)
-    // Call fixture.detectChanges()
-    // Assert the error message is visible in the DOM
+    loadingSubject.next(false);
+    errorSubject.next('Failed to load products');
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('Failed to load products');
   });
 
-  // TODO: Test that addToCart() calls CartService.addItem with the correct arguments
   it('delegates addToCart to CartService.addItem with quantity 1', () => {
-    // TODO: Call component.addToCart(makeProduct('p1'))
-    // Assert mockCartService.addItem was called with the product and quantity 1
+    const product = makeProduct('p1');
+    component.addToCart(product);
+
+    expect(mockCartService.addItem).toHaveBeenCalledWith(product, 1);
   });
 
-  // TODO: Test that retry() resets the page and reloads products
   it('resets to page 1, clears the error, and reloads on retry()', () => {
-    // TODO: Set component['currentPage'] to some page > 1
-    // Call component.retry()
-    // Assert mockProductService.clearError was called
-    // Assert currentPage is back to 1
-    // Assert getProducts was called with page 1
+    component.currentPage = 3;
+    mockProductService.getProducts.mockClear();
+
+    component.retry();
+
+    expect(mockProductService.clearError).toHaveBeenCalled();
+    expect(component.currentPage).toBe(1);
+    expect(mockProductService.getProducts).toHaveBeenCalledWith(1, 10);
   });
 
-  // TODO: Test that goToPage() navigates to a valid page
   it('navigates to a new page when goToPage() is called with a valid page number', () => {
-    // TODO: Push a total > pageSize into totalSubject so multiple pages exist
-    // Call component.goToPage(2)
-    // Assert getProducts was called with the new page number
+    totalSubject.next(20);
+    mockProductService.getProducts.mockClear();
+
+    component.goToPage(2);
+
+    expect(mockProductService.getProducts).toHaveBeenCalledWith(2, 10);
   });
 });

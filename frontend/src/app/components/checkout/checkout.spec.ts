@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { CartService } from '@app/services/cart';
 import { OrderService } from '@app/services/order';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import { vi } from 'vitest';
 import { CheckoutComponent } from './checkout';
 
@@ -58,43 +58,65 @@ describe('CheckoutComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  // TODO: Test that the component fetches an idempotency key from OrderService on init
   it('fetches an idempotency key on init', async () => {
-    // TODO: Call setup() and assert mockOrderService.getIdempotencyKey was called
-    // Assert component.idempotencyKey equals the key returned by the mock
+    await setup();
+    expect(mockOrderService.getIdempotencyKey).toHaveBeenCalled();
+    expect(component.idempotencyKey).toBe('test-key');
   });
 
-  // TODO: Test that the form is invalid when empty
   it('form is invalid when fields are empty', async () => {
-    // TODO: Call setup() and assert component.checkoutForm.invalid is true
+    await setup();
+    component.checkoutForm.setValue({ name: '', email: '', address: '' });
+    expect(component.checkoutForm.invalid).toBe(true);
   });
 
-  // TODO: Test that the form is valid when all required fields are correctly filled
   it('form is valid with a complete set of valid inputs', async () => {
-    // TODO: Call setup(), set all form fields to valid values
-    // Assert component.checkoutForm.valid is true
+    await setup();
+    component.checkoutForm.setValue({
+      name: 'Jane Doe',
+      email: 'jane@example.com',
+      address: '123 Main St',
+    });
+    expect(component.checkoutForm.valid).toBe(true);
   });
 
-  // TODO: Test that submitOrder() does not call checkout when the form is invalid
   it('does not submit when the form is invalid', async () => {
-    // TODO: Call setup() without filling the form
-    // Call component.submitOrder()
-    // Assert mockOrderService.checkout was NOT called
+    await setup();
+    component.submitOrder();
+    expect(mockOrderService.checkout).not.toHaveBeenCalled();
   });
 
-  // TODO: Test that a successful submitOrder() clears the cart and sets orderPlaced = true
   it('clears the cart and marks the order as placed on success', async () => {
-    // TODO: Call setup() and fill in valid form values
-    // Call component.submitOrder() and await fixture.whenStable()
-    // Assert mockOrderService.checkout was called
-    // Assert mockCartService.clearCart was called
-    // Assert component.orderPlaced is true
+    await setup();
+    component.checkoutForm.setValue({
+      name: 'Jane Doe',
+      email: 'jane@example.com',
+      address: '123 Main St',
+    });
+
+    component.submitOrder();
+    await fixture.whenStable();
+
+    expect(mockOrderService.checkout).toHaveBeenCalled();
+    expect(mockCartService.clearCart).toHaveBeenCalled();
+    expect(component.orderPlaced).toBe(true);
   });
 
-  // TODO: Test that a failed submitOrder() populates submitError
   it('sets submitError when checkout fails', async () => {
-    // TODO: Override mockOrderService.checkout to return throwError(...)
-    // Fill the form and call submitOrder()
-    // Assert component.submitError is set and isSubmitting is false
+    await setup();
+    mockOrderService.checkout.mockReturnValue(
+      throwError(() => ({ error: { message: 'Checkout API failed' } })),
+    );
+    component.checkoutForm.setValue({
+      name: 'Jane Doe',
+      email: 'jane@example.com',
+      address: '123 Main St',
+    });
+
+    component.submitOrder();
+    await fixture.whenStable();
+
+    expect(component.submitError).toBe('Checkout API failed');
+    expect(component.isSubmitting).toBe(false);
   });
 });

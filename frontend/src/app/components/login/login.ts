@@ -4,6 +4,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { Router } from '@angular/router';
 import { ApiService } from '@app/services/api';
 import { AuthService } from '@app/services/auth';
+import { getErrorMessage } from '@app/utils/http-error';
 
 /**
  * Login Component
@@ -53,23 +54,26 @@ export class LoginComponent {
    * No-op if the form is invalid.
    */
   onSubmit(): void {
-    if (this.loginForm.valid) {
-      this.isLoading = true;
-      this.error = null;
-
-      const { email, password } = this.loginForm.value;
-
-      this.apiService.post<{ accessToken: string }>('/auth/login', { email, password }).subscribe({
-        next: (response) => {
-          this.authService.setLoggedIn(response.accessToken);
-          this.router.navigate(['/products']);
-        },
-        error: (err) => {
-          this.isLoading = false;
-          this.error = err.error?.message || 'Login failed. Please try again.';
-          this.cdr.detectChanges();
-        },
-      });
+    if (this.loginForm.invalid) {
+      this.loginForm.markAllAsTouched();
+      return;
     }
+
+    this.isLoading = true;
+    this.error = null;
+
+    const { email, password } = this.loginForm.value;
+
+    this.apiService.post<{ accessToken: string }>('/auth/login', { email, password }).subscribe({
+      next: (response) => {
+        this.authService.setLoggedIn(response.accessToken);
+        this.router.navigate(['/products']);
+      },
+      error: (err) => {
+        this.isLoading = false;
+        this.error = getErrorMessage(err, 'Login failed. Please try again.');
+        this.cdr.detectChanges();
+      },
+    });
   }
 }

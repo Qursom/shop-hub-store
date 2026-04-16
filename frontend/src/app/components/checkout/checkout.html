@@ -27,6 +27,12 @@
         </div>
       }
 
+      @if (formNotice) {
+        <div class="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
+          <p class="text-amber-800">{{ formNotice }}</p>
+        </div>
+      }
+
       <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <!-- Customer Information Form -->
         <div class="bg-white rounded-lg shadow p-6">
@@ -123,7 +129,7 @@
             <!-- Submit Button -->
             <button
               type="submit"
-              [disabled]="isSubmitting"
+              [disabled]="isSubmitting || cartItemCount === 0"
               class="w-full bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-400 text-white font-semibold py-3 px-4 rounded transition"
             >
               {{ isSubmitting ? 'Processing...' : 'Place Order' }}
@@ -134,6 +140,12 @@
         <!-- Order Summary -->
         <div class="bg-white rounded-lg shadow p-6 h-fit">
           <h2 class="text-lg font-semibold text-gray-900 mb-4">Order Summary</h2>
+
+          @if (cartItemCount === 0) {
+            <p class="mb-4 rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-800">
+              Add at least one product to your cart before checkout.
+            </p>
+          }
 
           <div class="space-y-3">
             <div class="flex justify-between text-gray-600">

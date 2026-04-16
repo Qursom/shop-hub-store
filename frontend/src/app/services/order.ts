@@ -1,7 +1,9 @@
 import { inject, Injectable } from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject, Observable, of, throwError } from 'rxjs';
+import { catchError, finalize } from 'rxjs/operators';
 import { CartItem } from '@app/models/cart';
 import { ApiService } from './api';
+import { getErrorMessage } from '@app/utils/http-error';
 
 /**
  * Manages order operations and checkout flow.
@@ -39,11 +41,13 @@ export class OrderService {
    * @returns Observable that emits an object containing the `key` string and an ISO `timestamp`.
    */
   getIdempotencyKey(): Observable<{ key: string; timestamp: string }> {
-    // TODO: Implement idempotency key retrieval
-    // - Call GET /keys via apiService
-    // - On error, fall back to a locally generated unique key
-    //   (e.g. a UUID or timestamp-based string) so checkout can still proceed
-    throw new Error('Not implemented');
+    return this.apiService.get<{ key: string; timestamp: string }>('/keys').pipe(
+      catchError(() => {
+        // Graceful fallback: checkout can still proceed even if key endpoint is unavailable.
+        const key = `local-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
+        return of({ key, timestamp: new Date().toISOString() });
+      }),
+    );
   }
 
   /**
@@ -64,14 +68,34 @@ export class OrderService {
     total: string;
     itemCount: number;
   }> {
-    // TODO: Implement checkout
-    // - Set submitting state to true and clear any existing error
-    // - Build a checkout payload: { key: idempotencyKey, items: [...] }
-    //   where each item has { id, name, price }
-    // - Call POST /checkout via apiService
-    // - On success: set submitting to false
-    // - On error: set a meaningful error message, set submitting to false, and rethrow
-    throw new Error('Not implemented');
+    // Keep submission/error state in the service to simplify component logic and testing.
+    this.submittingSubject.next(true);
+    this.errorSubject.next(null);
+
+    const payload = {
+      key: idempotencyKey,
+      items: cartItems.map((item) => ({
+        id: item.product.id,
+        name: item.product.name,
+        price: item.product.price,
+        quantity: item.quantity,
+      })),
+    };
+
+    return this.apiService.post<{
+      message: string;
+      key: string;
+      subtotal: string;
+      total: string;
+      itemCount: number;
+    }>('/checkout', payload).pipe(
+      catchError((error) => {
+        const message = getErrorMessage(error, 'Checkout failed. Please try again.');
+        this.errorSubject.next(message);
+        return throwError(() => error);
+      }),
+      finalize(() => this.submittingSubject.next(false)),
+    );
   }
 
   /**

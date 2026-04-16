@@ -34,18 +34,28 @@ export class CartComponent implements OnInit {
   total = 0;
   taxRate = 0.1; // 10% tax
   readonly placeholder = APP_CONSTANTS.DEFAULT_PLACEHOLDER_URL;
+  cartNotice: string | null = null;
+
+  get totalItemCount(): number {
+    return this.cart.items.reduce((sum, item) => sum + item.quantity, 0);
+  }
 
   ngOnInit(): void {
-    // TODO: Subscribe to cartService.cart$
-    // On each emission update this.cart and call calculateTotals()
+    this.cartService.cart$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((cart) => {
+        this.cart = cart;
+        this.calculateTotals();
+      });
   }
 
   /**
-   * TODO: Recalculate subtotal, tax (taxRate), and total from the current cart state.
-   * Use cartService.getSubtotal() to get the subtotal.
+   * Recalculates subtotal, tax, and total from the current cart state.
    */
   private calculateTotals(): void {
-    // TODO: Implement price calculations
+    this.subtotal = this.cartService.getSubtotal();
+    this.tax = this.subtotal * this.taxRate;
+    this.total = this.subtotal + this.tax;
   }
 
   /**
@@ -54,7 +64,7 @@ export class CartComponent implements OnInit {
    * @param productId - ID of the product to remove.
    */
   removeItem(productId: string): void {
-    // TODO: Implement remove item
+    this.cartService.removeItem(productId);
   }
 
   /**
@@ -65,14 +75,30 @@ export class CartComponent implements OnInit {
    * @param quantity - New desired quantity.
    */
   updateQuantity(productId: string, quantity: number): void {
-    // TODO: If quantity <= 0, remove the item; otherwise update quantity
+    if (quantity <= 0) {
+      // Treat non-positive quantity as remove to avoid invalid cart state.
+      this.cartService.removeItem(productId);
+      this.cartNotice = 'Item removed from cart.';
+      return;
+    }
+
+    if (quantity > 99) {
+      // Client-side guard keeps quantity realistic and prevents accidental oversized input.
+      this.cartNotice = 'Maximum quantity per item is 99.';
+      return;
+    }
+
+    this.cartNotice = null;
+    this.cartService.updateQuantity(productId, quantity);
   }
 
   /**
    * Prompts the user for confirmation and clears all items from the cart.
    */
   clearCart(): void {
-    // TODO: Confirm with the user, then clear cart
+    if (confirm('Are you sure you want to clear your cart?')) {
+      this.cartService.clearCart();
+    }
   }
 
   /**
@@ -91,6 +117,11 @@ export class CartComponent implements OnInit {
    * @param event - The native change event from the `<input>` element.
    */
   onQuantityChange(productId: string, event: Event): void {
-    // TODO: Parse the input value as a number and update quantity
+    const value = Number((event.target as HTMLInputElement).value);
+    if (Number.isNaN(value) || !Number.isFinite(value)) {
+      this.cartNotice = 'Please enter a valid quantity.';
+      return;
+    }
+    this.updateQuantity(productId, value);
   }
 }

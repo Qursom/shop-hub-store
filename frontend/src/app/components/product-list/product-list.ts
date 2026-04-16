@@ -38,6 +38,8 @@ export class ProductListComponent implements OnInit {
   currentPage = 1;
   pageSize = 10;
   totalItems = 0;
+  addToCartNotice: string | null = null;
+  private addToCartNoticeTimeout?: ReturnType<typeof setTimeout>;
 
   /** Total number of pages based on `totalItems` and `pageSize`. */
   get totalPages(): number {
@@ -50,24 +52,47 @@ export class ProductListComponent implements OnInit {
   }
 
   /**
-   * TODO: Subscribe to productService.products$, loading$, error$, and total$
-   * for the lifetime of the component.
-   * On each emission update the corresponding local property.
+   * Subscribes to product data/state streams for the component lifetime and
+   * mirrors those values into local view-model properties.
    */
   private initializeSubscriptions(): void {
-    // TODO: Set up subscriptions to:
-    // - productService.products$ → update this.products
-    // - productService.loading$ → update this.loading
-    // - productService.error$ → update this.error
-    // - productService.total$ → update this.totalItems
+    this.productService.products$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((products) => {
+        this.products = products;
+        this.cdr.detectChanges();
+      });
+
+    this.productService.loading$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((loading) => {
+        this.loading = loading;
+        this.cdr.detectChanges();
+      });
+
+    this.productService.error$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((error) => {
+        this.error = error;
+        this.cdr.detectChanges();
+      });
+
+    this.productService.total$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((total) => {
+        this.totalItems = total;
+        this.cdr.detectChanges();
+      });
   }
 
   /**
-   * TODO: Trigger an API call to fetch the current page of products.
-   * Use this.productService.getProducts(this.currentPage, this.pageSize).
+   * Loads products for the current page and page size.
    */
   private loadProducts(): void {
-    // TODO: Call productService.getProducts() and subscribe
+    this.productService
+      .getProducts(this.currentPage, this.pageSize)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe();
   }
 
   /**
@@ -76,8 +101,12 @@ export class ProductListComponent implements OnInit {
    * @param page - The 1-based page number to navigate to.
    */
   goToPage(page: number): void {
-    // TODO: Validate page bounds (must be between 1 and totalPages and not the current page)
-    // Update this.currentPage and call loadProducts()
+    if (page < 1 || page > this.totalPages || page === this.currentPage) {
+      return;
+    }
+
+    this.currentPage = page;
+    this.loadProducts();
   }
 
   /**
@@ -86,8 +115,28 @@ export class ProductListComponent implements OnInit {
    * @param product - The product to add to the cart.
    */
   addToCart(product: Product): void {
-    // TODO: Call cartService.addItem() with the product and quantity 1
-    // (This is the integration point between Task 1 – Product Listing and Task 2 – Cart System)
+    const showNotice = (message: string): void => {
+      // Centralized notice helper keeps success/error feedback behavior consistent.
+      this.addToCartNotice = message;
+      if (this.addToCartNoticeTimeout) {
+        // Ensure only one active timer so rapid clicks do not stack stale messages.
+        clearTimeout(this.addToCartNoticeTimeout);
+      }
+      this.addToCartNoticeTimeout = setTimeout(() => {
+        this.addToCartNotice = null;
+        this.cdr.detectChanges();
+      }, 2000);
+      this.cdr.detectChanges();
+    };
+
+    if ((product.stock ?? 0) <= 0) {
+      showNotice(`${product.name} is currently out of stock.`);
+      return;
+    }
+
+    // Keep cart state management inside CartService (single source of truth).
+    this.cartService.addItem(product, 1);
+    showNotice(`${product.name} added to cart.`);
   }
 
   /**
@@ -103,7 +152,8 @@ export class ProductListComponent implements OnInit {
    * Clears the current error and re-fetches the product list from page 1.
    */
   retry(): void {
-    // TODO: Reset currentPage to 1, clear the error via productService.clearError(),
-    // then call loadProducts()
+    this.currentPage = 1;
+    this.productService.clearError();
+    this.loadProducts();
   }
 }

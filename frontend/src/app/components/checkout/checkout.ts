@@ -2,10 +2,9 @@ import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, inject, OnInit } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { APP_CONSTANTS } from '@app/constants/app.constants';
 import { CartService } from '@app/services/cart';
 import { OrderService } from '@app/services/order';
-import { Logger } from '@app/utils/log';
+import { getErrorMessage } from '@app/utils/http-error';
 
 /**
  * Checkout Component
@@ -47,6 +46,11 @@ export class CheckoutComponent implements OnInit {
   submitError: string | null = null;
   orderPlaced = false;
   idempotencyKey: string | null = null;
+  formNotice: string | null = null;
+
+  get cartItemCount(): number {
+    return this.cartService.getCart().items.reduce((sum, item) => sum + item.quantity, 0);
+  }
 
   ngOnInit(): void {
     this.calculateTotals();
@@ -54,36 +58,76 @@ export class CheckoutComponent implements OnInit {
   }
 
   /**
-   * TODO: Calculate cart totals for the order summary.
-   * Use cartService.getSubtotal() for the subtotal.
-   * Apply a 10% tax rate.
+   * Calculates checkout summary values (subtotal, tax, total).
    */
   private calculateTotals(): void {
-    // TODO: Populate this.cartSubtotal, this.cartTax (10%), and this.cartTotal
+    this.cartSubtotal = this.cartService.getSubtotal();
+    this.cartTax = this.cartSubtotal * 0.1;
+    this.cartTotal = this.cartSubtotal + this.cartTax;
   }
 
   /**
-   * TODO: Fetch an idempotency key from orderService.getIdempotencyKey()
-   * and store it in this.idempotencyKey.
-   * On error, fall back to generateLocalKey().
+   * Retrieves an idempotency key from the API and falls back to a local key on error.
    */
   private getIdempotencyKey(): void {
-    // TODO: Subscribe to orderService.getIdempotencyKey()
-    // On success: assign response.key to this.idempotencyKey
-    // On error: assign generateLocalKey() to this.idempotencyKey
+    this.orderService.getIdempotencyKey().subscribe({
+      next: (response) => {
+        this.idempotencyKey = response.key;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.idempotencyKey = this.generateLocalKey();
+        this.cdr.detectChanges();
+      },
+    });
   }
 
   /**
-   * TODO: Validate the form and cart, then submit the order.
-   * - Mark all fields as touched if the form is invalid and return early
-   * - Alert the user if the cart is empty
-   * - Alert the user if idempotencyKey is missing
-   * - Call orderService.checkout() with the cart items and idempotency key
-   * - On success: set orderPlaced = true, clear the cart, and navigate to /products after a delay
-   * - On error: set submitError with a meaningful message
+   * Validates input and cart state, then submits the order.
    */
   submitOrder(): void {
-    // TODO: Implement order submission
+    if (this.checkoutForm.invalid) {
+      // Surface validation errors immediately for better form UX.
+      this.checkoutForm.markAllAsTouched();
+      this.formNotice = 'Please fix the highlighted fields before placing your order.';
+      return;
+    }
+
+    const cart = this.cartService.getCart();
+    if (cart.items.length === 0) {
+      this.submitError = 'Your cart is empty.';
+      this.formNotice = null;
+      return;
+    }
+
+    if (!this.idempotencyKey) {
+      this.submitError = 'Unable to submit order. Please try again.';
+      this.formNotice = null;
+      return;
+    }
+
+    this.isSubmitting = true;
+    this.submitError = null;
+    this.formNotice = null;
+
+    this.orderService.checkout(cart.items, this.idempotencyKey).subscribe({
+      next: () => {
+        this.orderPlaced = true;
+        this.isSubmitting = false;
+        // Cart is the source of checkout totals, so clear it on successful order placement.
+        this.cartService.clearCart();
+        this.cdr.detectChanges();
+        setTimeout(() => {
+          // Redirect after a short delay so users can see confirmation feedback.
+          this.router.navigate(['/products']);
+        }, 1500);
+      },
+      error: (error) => {
+        this.submitError = getErrorMessage(error, 'Failed to place your order.');
+        this.isSubmitting = false;
+        this.cdr.detectChanges();
+      },
+    });
   }
 
   /**
@@ -91,7 +135,9 @@ export class CheckoutComponent implements OnInit {
    * so the user can try submitting the order again.
    */
   retryOrder(): void {
-    // TODO: Clear submitError and call getIdempotencyKey()
+    this.submitError = null;
+    this.formNotice = null;
+    this.getIdempotencyKey();
   }
 
   /**

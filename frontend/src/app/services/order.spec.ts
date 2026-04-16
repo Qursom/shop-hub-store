@@ -1,6 +1,7 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
+import { CartItem } from '@app/models/cart';
 import { environment } from '@environments/environment';
 import { OrderService } from './order';
 
@@ -23,18 +24,57 @@ describe('OrderService', () => {
     expect(service).toBeTruthy();
   });
 
-  // TODO: Test that getIdempotencyKey() makes a GET request to /keys and returns the key
   it('fetches an idempotency key from GET /keys', () => {
-    // TODO: Subscribe to service.getIdempotencyKey()
-    // Use httpMock.expectOne(`${apiBase}/keys`) to intercept and flush a response
-    // Assert the returned key matches the flushed response value
+    let responseKey = '';
+    service.getIdempotencyKey().subscribe((response) => {
+      responseKey = response.key;
+    });
+
+    const req = httpMock.expectOne(`${apiBase}/keys`);
+    expect(req.request.method).toBe('GET');
+    req.flush({ key: 'idempotency-key', timestamp: '2026-01-01T00:00:00.000Z' });
+
+    expect(responseKey).toBe('idempotency-key');
   });
 
-  // TODO: Test that checkout() makes a POST request to /checkout with the correct payload
   it('submits a POST to /checkout with cart items and idempotency key', () => {
-    // TODO: Call service.checkout(items, 'test-key').subscribe()
-    // Use httpMock.expectOne(`${apiBase}/checkout`) to intercept the request
-    // Assert the request body contains the idempotencyKey and items
-    // Flush a success response and assert the observable completes
+    const items: CartItem[] = [
+      {
+        product: {
+          id: 'p1',
+          name: 'Mechanical Keyboard',
+          description: 'desc',
+          price: 89.99,
+          imageUrl: '',
+          currency: 'USD',
+          stock: 10,
+          category: 'Accessories',
+        },
+        quantity: 2,
+      },
+    ];
+
+    let completed = false;
+    service.checkout(items, 'test-key').subscribe({
+      next: () => {
+        completed = true;
+      },
+    });
+
+    const req = httpMock.expectOne(`${apiBase}/checkout`);
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual({
+      key: 'test-key',
+      items: [{ id: 'p1', name: 'Mechanical Keyboard', price: 89.99, quantity: 2 }],
+    });
+
+    req.flush({
+      message: 'Checkout successful',
+      key: 'test-key',
+      subtotal: '179.98',
+      total: '179.98',
+      itemCount: 2,
+    });
+    expect(completed).toBe(true);
   });
 });

@@ -104,7 +104,9 @@ module.exports.checkout = async (event) => {
       typeof item.id !== "string" ||
       typeof item.name !== "string" ||
       typeof item.price !== "number" ||
-      item.price < 0
+      item.price < 0 ||
+      (item.quantity !== undefined &&
+        (!Number.isInteger(item.quantity) || item.quantity <= 0))
   );
   if (invalidItem) {
     return {
@@ -112,7 +114,8 @@ module.exports.checkout = async (event) => {
       body: JSON.stringify({
         error: {
           code: 400,
-          message: "Each item must have a valid id (string), name (string), and price (non-negative number)",
+          message:
+            "Each item must have a valid id (string), name (string), and price (non-negative number). If provided, quantity must be a positive integer.",
           details: { invalidItem },
         },
       }),
@@ -120,7 +123,10 @@ module.exports.checkout = async (event) => {
   }
 
   // Calculate totals
-  const subtotal = items.reduce((sum, item) => sum + item.price, 0);
+  const subtotal = items.reduce(
+    (sum, item) => sum + item.price * (item.quantity ?? 1),
+    0
+  );
   const total = subtotal;
 
   // Add key to KEYS_LIST
@@ -140,7 +146,7 @@ module.exports.checkout = async (event) => {
       key: key,
       subtotal: subtotal.toFixed(2),
       total: total.toFixed(2),
-      itemCount: items.length,
+      itemCount: items.reduce((sum, item) => sum + (item.quantity ?? 1), 0),
     }),
   };
 };

@@ -1,7 +1,9 @@
 import { inject, Injectable } from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject, Observable, of, throwError } from 'rxjs';
+import { catchError, finalize, map, tap } from 'rxjs/operators';
 import { Product } from '@app/models/product';
 import { ApiService } from './api';
+import { getErrorMessage } from '@app/utils/http-error';
 
 /**
  * Manages product data and operations.
@@ -46,12 +48,28 @@ export class ProductService {
    * @returns Observable that emits the fetched {@link Product} array for the requested page.
    */
   getProducts(page = 1, pageSize = 10): Observable<Product[]> {
-    // TODO: Implement product fetching
-    // - Set loading state to true and clear any existing error
-    // - Call GET /products?page={page}&pageSize={pageSize} via apiService
-    // - On success: update productsSubject, totalSubject, set loading to false
-    // - On error: set a meaningful error message, set loading to false, return empty array
-    throw new Error('Not implemented');
+    // Expose request lifecycle states so components stay declarative.
+    this.loadingSubject.next(true);
+    this.errorSubject.next(null);
+
+    return this.apiService
+      .get<{ items: Product[]; total: number }>(`/products?page=${page}&pageSize=${pageSize}`)
+      .pipe(
+        tap((response) => {
+          // Cache API data in subjects to support both reactive and sync consumers.
+          this.productsSubject.next(response.items ?? []);
+          this.totalSubject.next(response.total ?? 0);
+        }),
+        map((response) => response.items ?? []),
+        catchError((error) => {
+          // Normalize backend/network errors into UI-friendly messages.
+          this.errorSubject.next(getErrorMessage(error, 'Failed to load products. Please try again.'));
+          this.productsSubject.next([]);
+          this.totalSubject.next(0);
+          return of([]);
+        }),
+        finalize(() => this.loadingSubject.next(false)),
+      );
   }
 
   /**
@@ -61,10 +79,13 @@ export class ProductService {
    * @returns Observable that emits the matching {@link Product}.
    */
   getProductById(id: string): Observable<Product> {
-    // TODO: Implement single product fetch
-    // - Call GET /products/{id} via apiService
-    // - Handle errors gracefully
-    throw new Error('Not implemented');
+    return this.apiService.get<Product>(`/products/${id}`).pipe(
+      catchError((error) => {
+        const message = getErrorMessage(error, 'Failed to load product details.');
+        this.errorSubject.next(message);
+        return throwError(() => new Error(message));
+      }),
+    );
   }
 
   /**
@@ -73,8 +94,7 @@ export class ProductService {
    * @returns The last emitted array of {@link Product} objects.
    */
   getProductsSync(): Product[] {
-    // TODO: Return the current value from productsSubject
-    return [];
+    return this.productsSubject.value;
   }
 
   /**
