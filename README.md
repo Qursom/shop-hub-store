@@ -1,4 +1,4 @@
-# ShopHub - Screening Assignment Monorepo
+# ShopHub -
 
 A comprehensive e-commerce screening assignment for Angular frontend engineers. This monorepo contains the backend API, frontend boilerplate, and detailed documentation. The frontend is built with Angular 21 using standalone components.
 
