@@ -271,53 +271,10 @@ npm run lint
 - Component Best Practices
 - Testing Guidelines
 
-## Contributing
-
-To improve this assignment:
-
-1. Test locally
-2. Document changes
-3. Provide feedback
-4. Suggest improvements
 
 ## License
+This is only for learning pruposes.
 
-This assignment is proprietary and intended for hiring/evaluation purposes.
-
-## FAQ
-
-**Q: Can I use AI tools?**\
-A: Yes! We encourage exploring AI tools while demonstrating understanding.
-
-**Q: What if I get stuck?**\
-A: Review existing code examples, check the Angular docs, or ask your interviewer.
-
-**Q: How much time should I spend?**\
-A: Target TBD hours. Manage your time wisely across all features.
-
-**Q: What's the minimum viable solution?**\
-A: Implement all 10 core features. Bonus features are optional.
-
-**Q: Should I deploy this?**\
-A: For this assignment, local development is sufficient. Deployment not required.
-
-**Q: Can I refactor existing code?**\
-A: Yes, if it improves quality. Document why you changed things.
-
-## Support
-
-For issues or questions:
-
-1. Check the documentation
-2. Review example code
-3. Consult Angular docs
-4. Ask your interviewer (if appropriate)
-
-## Quick Links
-
-- **API Project**: [api/](./api/)
-- **Frontend Project**: [frontend/](./frontend/)
-- **Assignment Tasks**: [wiki/candidate-tasks.md](./wiki/candidate-tasks.md)
 
 **Ready to start?** Begin with [frontend/README.md](./frontend/README.md)\
 **Last Updated**: March 2026
